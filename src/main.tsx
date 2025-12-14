@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "modern-normalize";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import App from "./src/components/App/App.tsx";
+import App from "./components/App/App.tsx";
 
 const queryClient = new QueryClient();
 
