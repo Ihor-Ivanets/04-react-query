@@ -1,6 +1,6 @@
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import SearchBar from "../SearchBar/SearchBar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { fetchMovies } from "../../services/movieService";
 import type { Movie } from "../../types/movie";
@@ -15,7 +15,7 @@ import ReactPaginate from "react-paginate";
 import css from "./App.module.css";
 
 function App() {
-  const [search, setSearch] = useState<string | null>(null);
+  const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -26,10 +26,10 @@ function App() {
     setSelectedMovie(null);
   };
 
-  const { data, error, isLoading } = useQuery<MoviesHttpResponse>({
+  const { data, isLoading, isError, isSuccess } = useQuery<MoviesHttpResponse>({
     queryKey: ["movies", search, page],
     queryFn: () => fetchMovies(search as string, page),
-    enabled: search !== null,
+    enabled: search !== "",
     placeholderData: keepPreviousData,
   });
 
@@ -43,11 +43,21 @@ function App() {
     openModal();
   };
 
+  useEffect(() => {
+    if (isSuccess && data && data.results.length === 0) {
+      toast.error("Sorry, the movie was not found.");
+    }
+  }, [isSuccess, data]);
+
   return (
     <>
       <SearchBar onSubmit={handleSearch} />
 
-      {data && data.results.length > 0 && (
+      {isLoading && <Loader />}
+
+      {isError && <ErrorMessage />}
+
+      {isSuccess && data && data.results.length > 0 && (
         <>
           <ReactPaginate
             pageCount={data.total_pages}
@@ -64,14 +74,11 @@ function App() {
         </>
       )}
 
-      {isLoading && <Loader />}
-      <Toaster />
-
-      {error && <ErrorMessage />}
-
       {isModalOpen && selectedMovie && (
         <MovieModal movie={selectedMovie} onClose={closeModal} />
       )}
+
+      <Toaster />
     </>
   );
 }
